@@ -1,6 +1,7 @@
 import Discord from "discord.js";
 import towerData from "../data/units.json";
 import stringSimilarity from "string-similarity";
+import { attackSpeedAdd, round } from "../util/attackspeed";
 
 interface TowerList {
   [key: string]: Tower;
@@ -22,7 +23,7 @@ for (const t in towerData) {
     damage_type: tower.damage_type,
     damage_base: tower.damage_base,
     damage_rand: tower.damage_rand,
-    attack_speed: tower.attack_speed,
+    attack_speed: parseFloat(tower.attack_speed),
     builder: tower.builder,
     parent_cost: parseInt(tower.parent_cost),
     parent_supply: parseInt(tower.parent_supply),
@@ -34,7 +35,9 @@ export default {
   name: "tower",
   description: "Gets information about a Tower",
   execute: async function (message: Discord.Message, args: any) {
-    const towerName = args.join(" ");
+    const towerName = args
+      .filter((arg: string) => !arg.startsWith("+"))
+      .join(" ");
     const bestMatch = stringSimilarity.findBestMatch(
       towerName,
       Object.keys(Towers)
@@ -42,21 +45,119 @@ export default {
     if (bestMatch.rating <= 0.3) {
       return;
     }
-    const tower: Tower = Towers[bestMatch.target];
+    let tower: Tower = Towers[bestMatch.target];
 
+    const buffList = args.filter((arg: string) => arg.startsWith("+"));
+    if (buffList.length >= 1) {
+      tower = Object.assign({}, Towers[bestMatch.target]);
+      tower.buffs = [];
+      buffList.forEach((buff: string) => {
+        const buffType = buff.slice(1).toLowerCase();
+        if (!tower.buffs) {
+          return;
+        }
+        if (buffType === "astromech" && !tower.buffs.includes("Astromech")) {
+          tower.buffs.push("Astromech");
+          if (tower.attack_speed) {
+            tower.attack_speed = round(
+              attackSpeedAdd(tower.attack_speed, 0.1, 1),
+              2
+            );
+          }
+          if (tower.damage_base) {
+            tower.damage_base = Number(tower.damage_base) + Number(5);
+            tower.damage_base = round(tower.damage_base * 1.1, 0);
+          }
+          if (tower.damage_rand) {
+            tower.damage_rand = round(tower.damage_rand * 1.1, 0);
+          }
+          if (tower.life) {
+            tower.life += 300;
+          }
+          if (tower.cost) {
+            tower.cost += 105;
+          }
+        }
+        if (buffType === "vocant" && !tower.buffs.includes("Vocant de Furor")) {
+          tower.buffs.push("Vocant de Furor");
+          if (tower.attack_speed) {
+            tower.attack_speed = round(
+              attackSpeedAdd(tower.attack_speed, 0.3, 1),
+              2
+            );
+          }
+        }
+        if (buffType === "requiem" && !tower.buffs.includes("Requiem")) {
+          tower.buffs.push("Requiem");
+          if (tower.attack_speed) {
+            tower.attack_speed = round(
+              attackSpeedAdd(tower.attack_speed, 0.32, 1),
+              2
+            );
+          }
+          if (tower.damage_base) {
+            tower.damage_base = Number(tower.damage_base) + Number(24);
+            tower.damage_base = round(tower.damage_base * 1.16, 0);
+          }
+          if (tower.damage_rand) {
+            tower.damage_rand = round(tower.damage_rand * 1.16, 0);
+          }
+        }
+        if (buffType === "leadership" && !tower.buffs.includes("Leadership")) {
+          tower.buffs.push("Leadership");
+          if (tower.damage_base) {
+            tower.damage_base = round(tower.damage_base * 1.07, 0);
+          }
+          if (tower.damage_rand) {
+            tower.damage_rand = round(tower.damage_rand * 1.07, 0);
+          }
+        }
+        if (
+          buffType === "superiority" &&
+          !tower.buffs.includes("Superiority")
+        ) {
+          tower.buffs.push("Superiority");
+          if (tower.damage_base) {
+            tower.damage_base = round(tower.damage_base * 1.12, 0);
+          }
+          if (tower.damage_rand) {
+            tower.damage_rand = round(tower.damage_rand * 1.12, 0);
+          }
+        }
+        if (
+          buffType === "adrenalinerush" &&
+          !tower.buffs.includes("Adrenaline Rush")
+        ) {
+          tower.buffs.push("Adrenaline Rush");
+          if (tower.attack_speed) {
+            tower.attack_speed = round(
+              attackSpeedAdd(tower.attack_speed, 0.18, 1),
+              2
+            );
+          }
+        }
+      });
+    }
+
+    let tN = `${tower.name}`;
+    if (tower.buffs) {
+      tower.buffs.forEach((buff: string) => {
+        tN += ` (${buff})`;
+      });
+    }
     const Embed: Discord.MessageEmbed = new Discord.MessageEmbed()
       .setColor("#0099ff")
       .setAuthor(
-        "Tower Search",
+        `${tN}`,
         "https://cdn.discordapp.com/icons/543294798430339102/3fa3c167af9a9f40a1789c4dea3165d8.png",
         ""
       );
 
     if (!tower.damage_type) {
-      Embed.addField(`**${tower.name}**`, `*${tower.armor}*`);
+      Embed.addField(`**Tower Lookup**`, `*${tower.armor}*`);
     } else {
       Embed.addField(
-        `**${tower.name}**`,
+        `**Tower Lookup**`,
         `*${tower.damage_type}, ${tower.armor}*`
       );
     }
@@ -101,7 +202,15 @@ export default {
       const total: number = tower.supply + tower.parent_supply;
       Embed.addField("**Total Supply**", total.toString(), true);
     } else {
-      Embed.addField("\u200b", "\u200b", true);
+      if (!tower.supply && tower.parent_supply) {
+        Embed.addField(
+          "**Total Supply**",
+          tower.parent_supply.toString(),
+          true
+        );
+      } else {
+        Embed.addField("\u200b", "\u200b", true);
+      }
     }
     Embed.addField("\u200b", "\u200b", true);
 

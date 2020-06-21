@@ -1,17 +1,17 @@
-declare interface Sends {
+declare interface Send {
   name?: string;
-  speed?: string;
-  radius?: string;
+  speed?: number;
+  radius?: number;
   id?: string;
   details?: string;
-  life?: string;
+  life?: number;
   armor?: Armor;
-  cost?: string;
-  bounty?: string;
+  cost?: number;
+  bounty?: number;
   damage_type?: Damage;
-  damage_base?: string;
-  damage_rand?: string;
-  attack_speed?: string;
+  damage_base?: number;
+  damage_rand?: number;
+  attack_speed?: number;
 }
 
 declare enum Armor {
@@ -66,4 +66,5 @@ declare interface Tower {
   parent_cost?: number;
   parent_supply?: number;
   parent_name?: string;
+  buffs?: string[];
 }
