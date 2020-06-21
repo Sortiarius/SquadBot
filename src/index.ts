@@ -56,6 +56,8 @@ client.on("message", async (message) => {
     if (prefix === undefined) {
       await message.channel.send("Invalid Prefix!");
     }
+
+    if(!message.member!.hasPermission("ADMINISTRATOR")){ return; }
     //console.log(prefix);
 
     //console.log(message.guild?.id);
