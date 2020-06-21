@@ -1,0 +1,27 @@
+{
+  "name": "squadbot2",
+  "version": "0.0.1",
+  "description": "Squadron TD Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "prod": "tsc && node ./build/src/index.js",
+    "dev": "tsc-watch --onSuccess \"node ./build/index.js\"",
+    "lint": "prettier --write ./src"
+  },
+  "author": "Sortiarius",
+  "license": "ISC",
+  "dependencies": {
+    "@types/mongoose": "^5.7.27",
+    "@types/node": "^14.0.13",
+    "@types/string-similarity": "^3.0.0",
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0",
+    "mongoose": "^5.9.19",
+    "prettier": "^2.0.5",
+    "string-similarity": "^4.0.1",
+    "ts-node": "^8.10.2",
+    "tsc-watch": "^4.2.8",
+    "typescript": "^3.9.5"
+  }
+}
